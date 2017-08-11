@@ -5,9 +5,9 @@ library(xtable)
 get_or <- function(fit) { c(exp(c(coef(fit)[2,1],coef(fit)[2,1]-1.96*coef(fit)[2,2],coef(fit)[2,1]+1.96*coef(fit)[2,2])),coef(fit)[2,4]) }
 
 #Format data
-tissue <- read.csv('/Users/rachel/Documents/research/HLA/data/patient_tissues.csv',header=TRUE)
-mut <- read.csv('/Users/rachel/Documents/research/HLA/data/patient_mutations.cancer.PHBR.csv',header=TRUE)
-aff <- read.csv('/Users/rachel/Documents/research/HLA/data/patient_affinities.cancer.PHBR.csv',header=TRUE)
+tissue <- read.csv('../data/patient_tissues.csv',header=TRUE)
+mut <- read.csv('../data/patient_mutations.cancer.PHBR.csv',header=TRUE)
+aff <- read.csv('../data/patient_affinities.cancer.PHBR.csv',header=TRUE)
 patient <- as.character(mut[,1])
 mut <- as.matrix(mut[,-1])
 aff <- as.matrix(aff[,-1])

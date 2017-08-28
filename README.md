@@ -18,7 +18,7 @@ All figures are generated in either Python or R. The following libraries are req
 
 Furthermore, all figure generating scripts are based on pre-processed data. Please contact me to acquire access to the data.
 
-* Once data is acquired, create  data/ directory and copy all data directly into it.
+* Once data is acquired, create update the imports/import.pynb notebook with the location of the data.
 
 ### Data processing
 

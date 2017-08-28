@@ -39,6 +39,7 @@ thre <- c(seq(0,5,length=20),Inf)
 xr= cut(x,breaks=thre)
 m <- tapply(y,xr,'mean')
 plot(log(tapply(x,xr,'mean')),log(m/(1-m)),xlab='log-affinity',ylab='logit probability of mutation')
+
 #
 gam1= gam(y[sel] ~ s(log(x[sel])), family='binomial')
 ypred= predict(gam1,type='response',se.fit=TRUE)
@@ -48,6 +49,7 @@ lines(x[sel][o],ypred$fit[o]-1.96*ypred$se.fit[o],lty=2)
 lines(x[sel][o],ypred$fit[o]+1.96*ypred$se.fit[o],lty=2)
 #
 plot(gam1,rug=FALSE,xlab='log affinity',ylab='logit mutation probability',main='Estimated logit(prob) vs log(affinity)')
+
 dev.off()
 
 pdf('../generated_figures/globalassoc_descriptive.pdf')
@@ -138,3 +140,79 @@ abline(v=1,col='gray',lwd=2)
 dev.off()
 
 
+y= as.vector(mut); x= as.vector(aff)
+gene= rep(colnames(mut),each=nrow(mut))
+pat= rep(rownames(mut),ncol(mut))
+nmut= colSums(mut)
+genesel= (gene %in% names(nmut[nmut>=20]))
+
+tissuetypes <- as.character(unique(tissue[,2]))
+mysummary0 <- mysummary1 <- mysummary2 <- vector("list",length(tissuetypes))
+names(mysummary0) <- names(mysummary1) <- names(mysummary2) <- tissuetypes
+for (i in 1:length(tissuetypes)) {
+    cat("TISSUE",tissuetypes[i])
+    #
+    patsel= pat %in% as.character(tissue$Sample[tissue$Tissue==tissuetypes[i]])
+    sel= genesel & patsel
+    #
+   if (length(unique(y[sel])) < 2) next
+   if (min(table(y[sel])) == 1) next
+	#
+    lme0= glm(y[sel] ~ log(x[sel]), family='binomial')
+    mysummary0[[i]] <- summary(lme0)
+    #
+    lme1= glmer(y[sel] ~ log(x[sel]) + (1|gene[sel]), family='binomial')
+    mysummary1[[i]] <- summary(lme1)
+    #
+    lme2= glmer(y[sel] ~ log(x[sel]) + (1|pat[sel]), family='binomial')
+    mysummary2[[i]] <- summary(lme2)
+    cat("Done \n")
+}
+
+
+
+
+save(mysummary0,mysummary1,mysummary2,file='../data/fit_cancertype.20.RData')
+
+load('../data/fit_cancertype.20.RData')
+tabgene <- do.call(rbind,lapply(mysummary1,get_or))
+tabpat <- do.call(rbind,lapply(mysummary2,get_or))
+
+xtable(tabgene[order(rownames(tabgene)),],digits=c(0,3,3,3,4))
+xtable(tabpat[order(rownames(tabpat)),],digits=c(0,3,3,3,4))
+
+pdf('../generated_figures/oddsratio_withingene_cancertype.20.pdf')
+x2plot <- tabgene[order(tabgene[,1]),]
+plot(x2plot[,1],1:nrow(x2plot),pch=15,xlim=c(0.25,4),yaxt='n',ylab='',xlab='Odds-ratio',log='x')
+segments(x0=x2plot[,2],x1=x2plot[,3],1:nrow(x2plot),lty=2)
+text(x2plot[,2],1:nrow(x2plot),rownames(x2plot),pos=2)
+abline(v=1,col='gray',lwd=2)
+dev.off()
+
+pdf('../generated_figures/oddsratio_withinpat_cancertype.20.pdf')
+x2plot <- tabpat[order(tabpat[,1]),]
+plot(x2plot[,1],1:nrow(x2plot),pch=15,xlim=c(0.25,4),yaxt='n',ylab='',xlab='Odds-ratio',log='x')
+segments(x0=x2plot[,2],x1=x2plot[,3],1:nrow(x2plot),lty=2)
+text(x2plot[,2],1:nrow(x2plot),rownames(x2plot),pos=2)
+abline(v=1,col='gray',lwd=2)
+dev.off()
+
+npat <- table(tissue$Tissue)
+
+pdf('../generated_figures/oddsratio_withingene_cancertype_100pat.20.pdf')
+x2plot <- tabgene[order(tabgene[,1]),]
+x2plot <- x2plot[rownames(x2plot) %in% names(npat[npat>=100]), ]
+plot(x2plot[,1],1:nrow(x2plot),pch=15,xlim=c(0.25,4),yaxt='n',ylab='',xlab='Odds-ratio',log='x')
+segments(x0=x2plot[,2],x1=x2plot[,3],1:nrow(x2plot),lty=2)
+text(x2plot[,2],1:nrow(x2plot),rownames(x2plot),pos=2)
+abline(v=1,col='gray',lwd=2)
+dev.off()
+
+pdf('../generated_figures/oddsratio_withinpat_cancertype_100pat.20.pdf')
+x2plot <- tabpat[order(tabpat[,1]),]
+x2plot <- x2plot[rownames(x2plot) %in% names(npat[npat>=100]), ]
+plot(x2plot[,1],1:nrow(x2plot),pch=15,xlim=c(0.25,4),yaxt='n',ylab='',xlab='Odds-ratio',log='x')
+segments(x0=x2plot[,2],x1=x2plot[,3],1:nrow(x2plot),lty=2)
+text(x2plot[,2],1:nrow(x2plot),rownames(x2plot),pos=2)
+abline(v=1,col='gray',lwd=2)
+dev.off()
